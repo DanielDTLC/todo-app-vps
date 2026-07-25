@@ -1,0 +1,32 @@
+﻿name: Deploy to VPS (self-hosted runner)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Copiar backend al directorio de despliegue
+        run: |
+          rsync -av --delete --exclude '.env' ./backend/ /var/www/todo-app/backend/
+
+      - name: Copiar frontend al directorio de despliegue
+        run: |
+          rsync -av --delete ./frontend/ /var/www/todo-app/frontend/
+
+      - name: Instalar dependencias y reiniciar la API
+        run: |
+          cd /var/www/todo-app/backend
+          npm install --omit=dev
+          pm2 restart todo-api || pm2 start server.js --name todo-api
+          pm2 save
+
+      - name: Verificar salud de la API
+        run: |
+          sleep 3
+          curl -f http://localhost:3000/api/health
