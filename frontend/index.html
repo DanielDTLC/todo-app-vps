@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis tareas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #eef1ec;
+    --card: #fffdf8;
+    --ink: #17241f;
+    --ink-soft: #566158;
+    --line: #d8ddd2;
+    --moss: #26543f;
+    --moss-light: #e4ede6;
+    --marigold: #d98c2b;
+    --marigold-deep: #a86518;
+    --danger: #b3462c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(38,84,63,0.06), transparent 40%),
+      radial-gradient(circle at 90% 85%, rgba(217,140,43,0.08), transparent 45%),
+      var(--paper);
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+    padding: 56px 20px 80px;
+  }
+
+  .sheet { width: 100%; max-width: 560px; }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--marigold-deep);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--marigold-deep); display: inline-block; }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 42px;
+    line-height: 1.05;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .subhead { color: var(--ink-soft); font-size: 14.5px; margin: 0 0 30px; }
+
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .progress-track { flex: 1; height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--moss); border-radius: 99px; width: 0%; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+  .progress-label { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 1px 2px rgba(23,36,31,0.04);
+    margin-bottom: 18px;
+  }
+
+  .add-row { display: flex; gap: 10px; }
+
+  input[type=text] {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 15px;
+    background: #fff;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input[type=text]:focus { border-color: var(--moss); box-shadow: 0 0 0 3px var(--moss-light); }
+  input[type=text]::placeholder { color: #9aa39a; }
+
+  button.primary {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 9px;
+    background: var(--moss);
+    color: #f4f7f2;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 14.5px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  button.primary:hover { background: #1d4231; }
+  button.primary:active { transform: scale(0.97); }
+
+  .filter-wrap { position: relative; margin-bottom: 22px; }
+  .filter-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: 0.45; }
+  .filter-wrap input {
+    width: 100%;
+    padding-left: 38px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    font-size: 14.5px;
+  }
+  .filter-wrap input:focus { box-shadow: none; border-bottom-color: var(--moss); }
+
+  ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 13px 14px;
+    animation: rise 0.22s ease both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .stamp {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.6px solid var(--ink-soft);
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  }
+  .stamp:hover { border-color: var(--moss); transform: scale(1.06); }
+  .stamp.done { background: var(--moss); border-color: var(--moss); }
+  .stamp.done::after {
+    content: "";
+    position: absolute;
+    left: 7px; top: 3px;
+    width: 6px; height: 11px;
+    border: solid #f4f7f2;
+    border-width: 0 2px 2px 0;
+    transform: rotate(40deg);
+  }
+
+  li .title { flex: 1; font-size: 15px; word-break: break-word; transition: color 0.15s; }
+  li.completed .title { text-decoration: line-through; color: #9aa39a; }
+
+  .row-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+  li:hover .row-actions, li:focus-within .row-actions { opacity: 1; }
+
+  .icon-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: background 0.15s, color 0.15s;
+  }
+  .icon-btn:hover { background: var(--moss-light); color: var(--moss); }
+  .icon-btn.delete:hover { background: #f6e5df; color: var(--danger); }
+
+  .empty { text-align: center; padding: 46px 20px; color: var(--ink-soft); }
+  .empty .glyph { font-family: 'Fraunces', serif; font-style: italic; font-size: 30px; color: var(--marigold-deep); margin-bottom: 6px; }
+  .empty p { margin: 0; font-size: 14px; }
+
+  @media (max-width: 480px) {
+    h1 { font-size: 34px; }
+    .add-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="eyebrow">Agenda personal</div>
+    <h1>Mis tareas</h1>
+    <p class="subhead">Anotá lo pendiente, marcá lo hecho, filtrá lo que buscás.</p>
+
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-label" id="progressLabel">0 de 0</span>
+    </div>
+
+    <div class="card">
+      <div class="add-row">
+        <input type="text" id="newTaskInput" placeholder="Escribí una nueva tarea…" />
+        <button class="primary" id="addBtn">Agregar</button>
+      </div>
+    </div>
+
+    <div class="filter-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="filterInput" placeholder="Filtrar tareas…" />
+    </div>
+
+    <ul id="taskList"></ul>
+
+    <div class="empty" id="emptyMsg" style="display:none;">
+      <div class="glyph">&mdash;</div>
+      <p>No hay tareas todavía. Agregá la primera arriba.</p>
+    </div>
+  </div>
+
+<script>
+  // En el VPS (detrás de Nginx) usa ruta relativa /api.
+  // En local (ej. Live Server en :5500) apunta directo al backend en :3000.
+  const isLocalDev = ['5500', '5501'].includes(location.port);
+  const API_URL = isLocalDev ? 'http://localhost:3000/api/tasks' : '/api/tasks';
+
+  const taskList = document.getElementById('taskList');
+  const newTaskInput = document.getElementById('newTaskInput');
+  const addBtn = document.getElementById('addBtn');
+  const filterInput = document.getElementById('filterInput');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const progressFill = document.getElementById('progressFill');
+  const progressLabel = document.getElementById('progressLabel');
+
+  async function fetchTasks(query = '') {
+    const url = query ? `${API_URL}?q=${encodeURIComponent(query)}` : API_URL;
+    const res = await fetch(url);
+    const tasks = await res.json();
+    renderTasks(tasks);
+  }
+
+  function updateProgress(tasks) {
+    const done = tasks.filter(t => t.completed).length;
+    const total = tasks.length;
+    progressFill.style.width = total ? `${(done / total) * 100}%` : '0%';
+    progressLabel.textContent = `${done} de ${total}`;
+  }
+
+  function iconEdit() {
+    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+  }
+  function iconTrash() {
+    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+  }
+
+  function renderTasks(tasks) {
+    taskList.innerHTML = '';
+    emptyMsg.style.display = tasks.length ? 'none' : 'block';
+    updateProgress(tasks);
+
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = task.completed ? 'completed' : '';
+
+      const stamp = document.createElement('div');
+      stamp.className = 'stamp' + (task.completed ? ' done' : '');
+      stamp.onclick = () => toggleComplete(task.id, !task.completed);
+
+      const span = document.createElement('span');
+      span.className = 'title';
+      span.textContent = task.title;
+
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'icon-btn';
+      editBtn.innerHTML = iconEdit();
+      editBtn.title = 'Editar';
+      editBtn.onclick = () => editTask(task.id, task.title);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn delete';
+      delBtn.innerHTML = iconTrash();
+      delBtn.title = 'Eliminar';
+      delBtn.onclick = () => deleteTask(task.id);
+
+      actions.append(editBtn, delBtn);
+      li.append(stamp, span, actions);
+      taskList.appendChild(li);
+    });
+  }
+
+  async function addTask() {
+    const title = newTaskInput.value.trim();
+    if (!title) return;
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    newTaskInput.value = '';
+    fetchTasks(filterInput.value);
+  }
+
+  async function toggleComplete(id, completed) {
+    await fetch(`${API_URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completed })
+    });
+    fetchTasks(filterInput.value);
+  }
+
+  async function editTask(id, currentTitle) {
+    const newTitle = prompt('Editar tarea:', currentTitle);
+    if (newTitle === null || !newTitle.trim()) return;
+    await fetch(`${API_URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: newTitle.trim() })
+    });
+    fetchTasks(filterInput.value);
+  }
+
+  async function deleteTask(id) {
+    if (!confirm('¿Eliminar esta tarea?')) return;
+    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    fetchTasks(filterInput.value);
+  }
+
+  addBtn.onclick = addTask;
+  newTaskInput.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+  let debounceTimer;
+  filterInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => fetchTasks(filterInput.value), 250);
+  });
+
+  fetchTasks();
+</script>
+</body>
+</html>
