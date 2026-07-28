@@ -31,6 +31,5 @@ jobs:
           rsync -avz --delete \
             ./frontend/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/todo-app/frontend/
 
-      - name: Instalar dependencias y reiniciar la API
-        run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
+     - name: Instalar dependencias y reiniciar la API
+        run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /var/www/todo-app/backend && npm install --omit=dev && (pm2 restart todo-api || pm2 start server.js --name todo-api) && pm2 save && sudo chmod -R 755 /var/www/todo-app"
