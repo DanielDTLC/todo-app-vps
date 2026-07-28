@@ -1,4 +1,4 @@
-﻿name: Deploy to VPS (AWS EC2)
+name: Deploy to VPS (AWS EC2)
 
 on:
   push:
