@@ -1,4 +1,4 @@
-﻿name: Deploy to VPS (self-hosted runner)
+﻿name: Deploy to VPS (AWS EC2)
 
 on:
   push:
@@ -6,27 +6,38 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout codigo
+      - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Copiar backend al directorio de despliegue
-        run: |
-          rsync -av --delete --exclude '.env' ./backend/ /var/www/todo-app/backend/
+      - name: Configurar clave SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-      - name: Copiar frontend al directorio de despliegue
-        run: |
-          rsync -av --delete ./frontend/ /var/www/todo-app/frontend/
+      - name: Agregar host a known_hosts
+        run: ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Instalar dependencias y reiniciar la API
-        run: |
-          cd /var/www/todo-app/backend
-          npm install --omit=dev
-          pm2 restart todo-api || pm2 start server.js --name todo-api
-          pm2 save
+      - name: Sincronizar backend con el VPS
+        run: rsync -avz --delete --exclude 'node_modules' --exclude '.env' ./backend/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/todo-app/backend/
+
+      - name: Sincronizar frontend con el VPS
+        run: rsync -avz --delete ./frontend/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/todo-app/frontend/
+
+      - name: Instalar dependencias
+        run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /var/www/todo-app/backend && npm install --omit=dev"
+
+      - name: Reiniciar la API con PM2
+        run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /var/www/todo-app/backend && pm2 restart todo-api || pm2 start server.js --name todo-api"
+
+      - name: Guardar estado de PM2
+        run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "pm2 save"
+
+      - name: Corregir permisos
+        run: ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "sudo chmod -R 755 /var/www/todo-app"
 
       - name: Verificar salud de la API
         run: |
           sleep 3
-          curl -f http://localhost:3000/api/health
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "curl -f http://localhost:3000/api/health"
